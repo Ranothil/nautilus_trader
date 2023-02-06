@@ -988,10 +988,14 @@ cdef class Strategy(Actor):
     cdef void _cancel_gtd_expiry(self, Order order) except *:
         cdef str timer_name = self._get_gtd_expiry_timer_name(order.client_order_id)
         if timer_name in self._clock.timer_names:
-            self._log.info(
-                f"Canceling managed GTD expiry timer for {order.client_order_id} @ {order.expire_time}.",
-                LogColor.BLUE,
-            )
+            try:
+                self._log.info(
+                    f"Canceling managed GTD expiry timer for {order.client_order_id} @ {order.expire_time}.",
+                    LogColor.BLUE,
+                )
+            except AttributeError:
+                # This can happen if the order has become a taker market order
+                pass
             self._clock.cancel_timer(name=timer_name)
 
     cpdef void _expire_gtd_order(self, TimeEvent event) except *:
